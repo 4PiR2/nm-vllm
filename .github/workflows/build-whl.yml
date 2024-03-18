@@ -121,6 +121,14 @@ jobs:
                 path: dist/${{ steps.build_whl.outputs.whl }}
                 retention-days: 15
 
+            - name: upload tarball
+              uses: actions/upload-artifact@v4
+              if: success() || failure()
+              with:
+                name: ${{ steps.build_whl.outputs.tarball }}
+                path: dist/${{ steps.build_whl.outputs.tarball }}
+                retention-days: 15
+
             - name: summary
               uses: ./.github/actions/nm-whl-summary/
               with:
@@ -129,6 +137,7 @@ jobs:
                 testmo_run_url: https://neuralmagic.testmo.net/automation/runs/view/${{ steps.create_testmo_run.outputs.id }}
                 python: ${{ inputs.python }}
                 whl: ${{ steps.build_whl.outputs.whl }}
+                tarball: ${{ steps.build_whl.outputs.tarball }}
 
             - name: complete testmo run
               uses: ./.github/actions/nm-testmo-run-complete/
