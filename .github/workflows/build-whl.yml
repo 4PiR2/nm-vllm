@@ -117,7 +117,7 @@ jobs:
               uses: actions/upload-artifact@v4
               if: success() || failure()
               with:
-                name: ${{ steps.build_whl.outputs.whl }}
+                name: ${{ steps.build_whl.outputs.artifact }}
                 path: dist/
                 retention-days: 15
 

@@ -34,6 +34,8 @@ runs:
       ls -alh dist/
       TARBALL_FILEPATH=$(find dist -iname "*nm-vllm*.tar.gz")
       TARBALL=$(basename ${TARBALL_FILEPATH})
+      echo "TARBALL_FILEPATH=${TARBALL_FILEPATH}"
+      echo "TARBALL=${TARBALL}"
       echo "status=${SUCCESS}" >> "$GITHUB_OUTPUT"
       echo "tarball=${TARBALL}" >> "$GITHUB_OUTPUT"
       ARTIFACT=`echo "${WHL}" | sed 's/.whl//g'`
