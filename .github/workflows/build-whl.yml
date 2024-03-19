@@ -113,20 +113,12 @@ jobs:
                 python: ${{ inputs.python }}
                 venv: ${{ env.VENV_BUILD_BASE }}
 
-            - name: upload whl
+            - name: upload dist
               uses: actions/upload-artifact@v4
               if: success() || failure()
               with:
                 name: ${{ steps.build_whl.outputs.whl }}
-                path: dist/${{ steps.build_whl.outputs.whl }}
-                retention-days: 15
-
-            - name: upload tarball
-              uses: actions/upload-artifact@v4
-              if: success() || failure()
-              with:
-                name: ${{ steps.build_whl.outputs.tarball }}
-                path: dist/${{ steps.build_whl.outputs.tarball }}
+                path: dist/
                 retention-days: 15
 
             - name: summary

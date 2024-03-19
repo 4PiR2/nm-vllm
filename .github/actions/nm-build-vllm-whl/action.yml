@@ -36,5 +36,7 @@ runs:
       TARBALL=$(basename ${TARBALL_FILEPATH})
       echo "status=${SUCCESS}" >> "$GITHUB_OUTPUT"
       echo "tarball=${TARBALL}" >> "$GITHUB_OUTPUT"
+      ARTIFACT=`echo "${WHL}" | sed 's/.whl//g'`
+      echo "artifact=${ARTIFACT}" >> "$GITHUB_OUTPUT"
       exit ${SUCCESS}
     shell: bash
