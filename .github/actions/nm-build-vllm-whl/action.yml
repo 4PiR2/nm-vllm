@@ -40,5 +40,6 @@ runs:
       echo "tarball=${TARBALL}" >> "$GITHUB_OUTPUT"
       ARTIFACT=`echo "${WHL}" | sed 's/.whl//g'`
       echo "artifact=${ARTIFACT}" >> "$GITHUB_OUTPUT"
+      echo "artifact=${ARTIFACT}"
       exit ${SUCCESS}
     shell: bash
