@@ -116,15 +116,18 @@ class MarlinLinearMethod(LinearMethodBase):
 
         # Validate input_size_per_partition
         if input_size_per_partition % self.quant_config.min_k_threads != 0:
-            raise ValueError(
-                f"Weight input_size_per_partition = "
-                f"{input_size_per_partition} is not divisible by "
-                f"min_k_threads = {self.quant_config.min_k_threads}.")
-        if (self.quant_config.group_size != -1 and
-                input_size_per_partition % self.quant_config.group_size != 0):
-            raise ValueError(f"Weight input_size_per_partition = "
-                             f"{input_size_per_partition} is not divisible by "
-                             f"group_size = {self.quant_config.group_size}.")
+            is_bad_input_size = True
+            # raise ValueError(
+            #     f"Weight input_size_per_partition = "
+            #     f"{input_size_per_partition} is not divisible by "
+            #     f"min_k_threads = {self.quant_config.min_k_threads}.")
+        else:
+            is_bad_input_size = False
+        # if (self.quant_config.group_size != -1 and
+        #         input_size_per_partition % self.quant_config.group_size != 0):
+        #     raise ValueError(f"Weight input_size_per_partition = "
+        #                      f"{input_size_per_partition} is not divisible by "
+        #                      f"group_size = {self.quant_config.group_size}.")
 
         # Check that we have at least 4 tiles horizontally in the shard
         num_tiles_per_perm = self.quant_config.perm_len // (
@@ -162,7 +165,7 @@ class MarlinLinearMethod(LinearMethodBase):
 
         scales = Parameter(
             torch.empty(
-                input_groups,
+                input_groups * 2 + 1 if is_bad_input_size else input_groups,
                 output_size_per_partition,
                 device="cuda",
                 dtype=params_dtype,
@@ -201,6 +204,17 @@ class MarlinLinearMethod(LinearMethodBase):
         qweight = weights["B"]
         scales = weights["s"]
         workspace = weights["workspace"]
+        if hasattr(x, 'tp_rank'):
+            x_padding = torch.zeros_like(x[..., :64])
+            scales = scales[::2].contiguous()
+            qw = torch.empty(qweight.size(0) + 64//self.quant_config.tile_size, qweight.size(1), dtype=qweight.dtype, device=qweight.device)
+            if x.tp_rank % 2 == 0:
+                qw[:qweight.size(0)] = qweight
+                x = torch.cat([x, x_padding], dim=-1)
+            else:
+                qw[-qweight.size(0):] = qweight
+                x = torch.cat([x_padding, x], dim=-1)
+            qweight = qw
 
         x_2d = x.view(-1, x.shape[-1])
 

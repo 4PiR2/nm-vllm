@@ -171,6 +171,7 @@ class FalconAttention(nn.Module):
                                   self.head_dim,
                                   scale=self.inv_norm_factor,
                                   num_kv_heads=self.num_kv_heads)
+        self.tp_rank = get_tensor_model_parallel_rank()
 
     def forward(
         self,
@@ -187,6 +188,7 @@ class FalconAttention(nn.Module):
             q, k = self.rotary_emb(positions, q, k)
         k_cache, v_cache = kv_cache
         attn_output = self.attn(q, k, v, k_cache, v_cache, input_metadata)
+        attn_output.tp_rank = self.tp_rank
         attn_output, bias = self.dense(attn_output)
         return attn_output, bias
 
@@ -441,6 +443,8 @@ class FalconForCausalLM(nn.Module):
                         1).reshape(*loaded_weight_shape[:output_dim], -1,
                                    *loaded_weight_shape[output_dim + 1:])
                     loaded_weight = torch.cat([wq, wk, wv], dim=output_dim)
+            if name.endswith('self_attention.dense.s'):
+                loaded_weight = loaded_weight.repeat_interleave(repeats=2, dim=-2)
 
             weight_loader = getattr(param, "weight_loader",
                                     default_weight_loader)
