@@ -197,9 +197,9 @@ class LLM:
                                     lora_request=lora_request)
 
     def _run_engine(self, use_tqdm: bool) -> List[RequestOutput]:
-        # Initialize tqdm.
+        num_requests = self.llm_engine.get_num_unfinished_requests()
         if use_tqdm:
-            num_requests = self.llm_engine.get_num_unfinished_requests()
+            # Initialize tqdm.
             pbar = tqdm(total=num_requests,
                         desc="Processed prompts",
                         dynamic_ncols=True)
@@ -207,6 +207,7 @@ class LLM:
         outputs: List[RequestOutput] = []
         while self.llm_engine.has_unfinished_requests():
             step_outputs = self.llm_engine.step()
+            assert len(step_outputs) == num_requests  # disable dynamic batching (fixed batch size for benchmarking)
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
